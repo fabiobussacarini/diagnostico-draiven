@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#FAF9F6" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>Diagnóstico de Oportunidades em IA – Draiven</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tiempos+Headline:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Claude palette – warm neutrals + terracotta */
+      --primary:       #CF6830;   /* terracota Claude */
+      --primary-dark:  #A8502A;
+      --primary-light: #FDF0E8;
+      --accent:        #E8824A;   /* laranja mais vivo */
+      --bg:            #FAF9F6;   /* creme claro */
+      --surface:       #FFFFFF;
+      --surface2:      #F5F3EF;
+      --border:        #E5E0D8;
+      --border-focus:  #CF6830;
+      --text:          #1A1713;   /* quase preto quente */
+      --text-secondary:#4A4540;
+      --text-muted:    #8A827A;
+      --success:       #2E7D52;
+      --error:         #C0392B;
+      --radius:        10px;
+      --radius-sm:     7px;
+      --shadow-sm:     0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
+      --shadow-md:     0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.05);
+    }
+
+    /* ══════════════════════════════════════════
+       MOBILE-FIRST — otimizado para tela vertical
+       (Instagram / campanhas mobile)
+       ══════════════════════════════════════════ */
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      /* evita zoom indesejado ao focar inputs no iOS */
+      touch-action: manipulation;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 20px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::after {
+      content: '';
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 320px;
+      height: 160px;
+      background: radial-gradient(ellipse, rgba(207,104,48,.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-light);
+      border: 1px solid rgba(207,104,48,.25);
+      border-radius: 999px;
+      padding: 5px 13px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .4px;
+      color: var(--primary-dark);
+      margin-bottom: 16px;
+    }
+    .header h1 {
+      font-family: 'Tiempos Headline', Georgia, 'Times New Roman', serif;
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.25;
+      margin-bottom: 0;
+      letter-spacing: -.4px;
+    }
+    .header h1 em {
+      font-style: italic;
+      color: var(--primary);
+    }
+    .header p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      max-width: 320px;
+      margin: 0 auto;
+    }
+    .version-tag {
+      margin-top: 14px;
+      display: inline-block;
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: .5px;
+    }
+
+    /* ── Progress bar — sticky no topo ── */
+    .progress-wrap {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
+    }
+    .progress-inner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .progress-bar-bg {
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      border-radius: 999px;
+      transition: width .4s ease;
+    }
+    .progress-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* ── Container ── */
+    .container {
+      padding: 16px 12px 80px;  /* bottom generoso para o polegar */
+    }
+
+    /* ── Section cards ── */
+    .section-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .icon-register  { background: #FDF0E8; }
+    .icon-process   { background: #EEF4FF; }
+    .icon-data      { background: #EDFBF3; }
+    .icon-tech      { background: #FFFBEB; }
+    .icon-innovation{ background: #FFF0F0; }
+    .icon-register2 { background: #F5F0FE; }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+    }
+    .section-subtitle {
+      font-family: 'Tiempos Headline', Georgia, serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 1px;
+      letter-spacing: -.1px;
+    }
+
+    /* ── Field groups ── */
+    .field-group { margin-bottom: 22px; }
+    .field-group:last-child { margin-bottom: 0; }
+
+    label.field-label {
+      display: block;
+      font-size: 14px;       /* mínimo confortável no mobile */
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 10px;
+      line-height: 1.55;
+    }
+    label.field-label .q-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      border: 1px solid rgba(207,104,48,.3);
+      border-radius: 50%;
+      font-size: 10px;
+      font-weight: 700;
+      margin-right: 6px;
+      flex-shrink: 0;
+      vertical-align: middle;
+    }
+
+    /* Text inputs — 16px evita zoom automático no iOS */
+    .text-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 13px 14px;
+      font-size: 16px;   /* ← crítico: < 16px causa zoom no iOS */
+      font-family: inherit;
+      color: var(--text);
+      outline: none;
+      transition: border-color .18s, box-shadow .18s;
+      -webkit-appearance: none;
+    }
+    .text-input::placeholder { color: var(--text-muted); }
+    .text-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(207,104,48,.14);
+    }
+
+    /* Radio options — alvos de toque grandes (min 48px height) */
+    .options-list { display: flex; flex-direction: column; gap: 8px; }
+    .option-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 13px;   /* altura generosa para o toque */
+      cursor: pointer;
+      transition: border-color .18s, background .18s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      min-height: 48px;     /* WCAG touch target */
+    }
+    /* Active state para feedback tátil imediato */
+    .option-item:active {
+      background: #FDF5EF;
+      border-color: var(--accent);
+    }
+    .option-item.selected {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+    .option-item input[type="radio"] { display: none; }
+    .radio-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+      margin-top: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color .18s, background .18s;
+    }
+    .option-item.selected .radio-dot {
+      border-color: var(--primary);
+      background: var(--primary);
+    }
+    .option-item.selected .radio-dot::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #fff;
+    }
+    .option-text {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      padding-top: 1px;
+    }
+    .option-item.selected .option-text { color: var(--text); font-weight: 500; }
+
+    /* "Outros" inline input */
+    .outros-input {
+      display: none;
+      margin-top: 10px;
+      width: 100%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 16px;    /* evita zoom iOS */
+      font-family: inherit;
+      color: var(--text);
+      outline: none;
+      transition: border-color .18s;
+      -webkit-appearance: none;
+    }
+    .outros-input:focus { border-color: var(--primary); }
+    .option-item.selected .outros-input { display: block; }
+
+    /* ── Botão submit — largura total no mobile ── */
+    .submit-wrap {
+      text-align: center;
+      margin-top: 16px;
+    }
+    .btn-submit {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      background: var(--primary);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: inherit;
+      border: none;
+      border-radius: var(--radius);
+      padding: 16px 24px;
+      cursor: pointer;
+      transition: background .18s, box-shadow .18s;
+      box-shadow: 0 2px 8px rgba(207,104,48,.35);
+      letter-spacing: .1px;
+      -webkit-tap-highlight-color: transparent;
+      min-height: 52px;
+    }
+    .btn-submit:active { background: var(--primary-dark); }
+    .btn-submit:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+
+    /* ── Validation ── */
+    .field-error {
+      font-size: 12px;
+      color: var(--error);
+      margin-top: 6px;
+      display: none;
+    }
+    .field-group.has-error .text-input,
+    .field-group.has-error .option-item { border-color: var(--error) !important; }
+    .field-group.has-error .field-error { display: block; }
+
+    /* ── Success screen ── */
+    #success-screen {
+      display: none;
+      padding: 48px 24px 80px;
+      text-align: center;
+    }
+    .success-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--primary-light);
+      border: 1.5px solid rgba(207,104,48,.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      margin: 0 auto 24px;
+    }
+    #success-screen h2 {
+      font-family: 'Tiempos Headline', Georgia, serif;
+      font-size: 26px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--text);
+      letter-spacing: -.3px;
+    }
+    #success-screen p { font-size: 15px; color: var(--text-secondary); line-height: 1.7; }
+
+    /* ── Modal overlay ── */
+    #modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 8, 5, 0.72);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    #modal-overlay.visible {
+      display: flex;
+      animation: fadeIn .25s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    #modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px 28px 32px;
+      max-width: 340px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 24px 60px rgba(0,0,0,.25);
+      animation: slideUp .3s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    #modal-icon {
+      font-size: 40px;
+      margin-bottom: 18px;
+      line-height: 1;
+    }
+    #modal-text {
+      font-size: 15px;
+      color: var(--text);
+      line-height: 1.65;
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+    #modal-counter {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    #countdown {
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    /* ── Desktop: limita largura e adiciona margens ── */
+    @media (min-width: 600px) {
+      .container { max-width: 600px; margin: 0 auto; padding: 28px 20px 64px; }
+      .header { padding: 36px 24px 30px; }
+      .header h1 { font-size: 28px; }
+      .section-card { padding: 26px 24px; margin-bottom: 14px; }
+      .btn-submit { width: auto; padding: 14px 48px; display: inline-flex; }
+      .option-item:hover { border-color: var(--accent); background: #FDF5EF; }
+      .progress-inner { max-width: 600px; margin: 0 auto; }
+      #success-screen { max-width: 480px; margin: 0 auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<div class="header">
+  <div class="header-badge">✦ Draiven · Inteligência Artificial</div>
+  <h1>Diagnóstico de Oportunidades <em>em IA</em></h1>
+</div>
+
+<!-- ═══════════════ PROGRESS ═══════════════ -->
+<div class="progress-wrap">
+  <div class="progress-inner">
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressBar"></div>
+    </div>
+    <div class="progress-label" id="progressLabel">0 / 10 respondidas</div>
+  </div>
+</div>
+
+<!-- ═══════════════ FORM ═══════════════ -->
+<div class="container" id="form-container">
+<form id="diagForm" novalidate>
+
+  <!-- ── CADASTRO PARTE 1 ── -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon icon-register">👤</div>
+      <div>
+        <div class="section-title">Cadastro</div>
+        <div class="section-subtitle">Suas informações</div>
+      </div>
+    </div>
+
+    <div class="field-group" id="fg-nome">
+      <label class="field-label" for="nome">Nome completo *</label>
+      <input class="text-input" type="text" id="nome" name="nome" placeholder="Ex: João Silva" autocomplete="name" />
+      <div class="field-error">Por favor, informe seu nome completo.</div>
+    </div>
+
+    <div class="field-group" id="fg-empresa">
+      <label class="field-label" for="empresa">Nome da empresa *</label>
+      <input class="text-input" type="text" id="empresa" name="empresa" placeholder="Ex: Acme Ltda." autocomplete="organization" />
+      <div class="field-error">Por favor, informe o nome da empresa.</div>
+    </div>
+  </div>
+
+  <!-- ── ÁREA 1: PROCESSOS ── -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon icon-process">⚙️</div>
+      <div>
+        <div class="section-title">Área 1</div>
+        <div class="section-subtitle">Processos — Eficiência e Alocação</div>
+      </div>
+    </div>
+
+    <!-- Q1 -->
+    <div class="field-group" id="fg-q1">
+      <label class="field-label">
+        <span class="q-num">1</span>
+        Qual a porcentagem das tarefas operacionais e repetitivas (ex: entrada de dados, conciliação, relatórios) que ainda dependem de intervenção humana manual na sua empresa? *
+      </label>
+      <div class="options-list">
+        <label class="option-item" onclick="selectOption(this,'q1')">
+          <input type="radio" name="q1" value="menos_20" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Menos de 20%</div>
+        </label>
+        <label class="option-item" onclick="selectOption(this,'q1')">
+          <input type="radio" name="q1" value="20_50" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Entre 20% e 50%</div>
+        </label>
+        <label class="option-item" onclick="selectOption(this,'q1')">
+          <input type="radio" name="q1" value="mais_50" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Mais de 50%</div>
+        </label>
+      </div>
+      </div>
+<!-- Q2 -->
+    <div class="field-group" id="fg-q2">
+      <label class="field-label">
+        <span class="q-num">2</span>
+        Em qual setor da sua empresa você identifica hoje o maior descompasso entre custos operacionais e resultados entregues? *
+      </label>
+      <div class="options-list">
+        <label class="option-item" onclick="selectOption(this,'q2')">
+          <input type="radio" name="q2" value="marketing_vendas" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Marketing / Vendas</div>
+        </label>
+        <label class="option-item" onclick="selectOption(this,'q2')">
+          <input type="radio" name="q2" value="operacoes_logistica" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Operações / Logística</div>
+        </label>
+        <label class="option-item" onclick="selectOption(this,'q2')">
+          <input type="radio" name="q2" value="financeiro_controladoria" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Financeiro / Controladoria</div>
+        </label>
+        <label class="option-item" onclick="selectOption(this,'q2')">
+          <input type="radio" name="q2" value="juridico_compliance" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Jurídico / Compliance</div>
+        </label>
+        <label class="option-item" onclick="selectOption(this,'q2')">
+          <input type="radio" name="q2" value="outros" />
+          <div class="radio-dot"></div>
+          <div class="option-text">
+            Outros
+            <input class="outros-input" type="text" placeholder="Especifique o setor..." onclick="event.stopPropagation()" />
+          </div>
+        </label>
+      </div>
+      </div>
+</div>
+
+  <!-- ── ÁREA 2: DADOS ── -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon icon-data">📊</div>
+      <div>
+        <div class="section-title">Área 2</div>
+        <div class="section-subtitle">Dados — Acesso e Inteligência</div>
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="field-group" id="fg-q3">
+      <label class="field-label">
+        <span class="q-num">3</span>
+        Quanto tempo, em média, sua diretoria leva para obter uma resposta estratégica que dependa do cruzamento de dados de diferentes departamentos? *
+      </label>
+      <div class="options-list">
+        <label class="option-item" onclick="selectOption(this,'q3')">
+          <input type="radio" name="q3" value="tempo_real" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Tempo real / Minutos</div>
+        </label>
+        <label class="option-item" onclick="selectOption(this,'q3')">
+          <input type="radio" name="q3" value="horas" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Algumas horas</div>
+        </label>
+        <label class="option-item" onclick="selectOption(this,'q3')">
+          <input type="radio" name="q3" value="dias" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Dias (dependo de solicitações ao TI/Analistas)</div>
+        </label>
+      </div>
+      </div>
+<!-- Q4 -->
+    <div class="field-group" id="fg-q4">
+      <label class="field-label">
+        <span class="q-num">4</span>
+        Onde residem os dados vitais da sua operação hoje e qual o nível de integração entre eles? *
+      </label>
+      <div class="options-list">
+        <label class="option-item" onclick="selectOption(this,'q4')">
+          <input type="radio" name="q4" value="centralizados" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Totalmente centralizados e integrados (ERP/CRM/Cloud).</div>
+        </label>
+        <label class="option-item" onclick="selectOption(this,'q4')">
+          <input type="radio" name="q4" value="parcial" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Parcialmente integrados, mas com muitas planilhas paralelas.</div>
+        </label>
+        <label class="option-item" onclick="selectOption(this,'q4')">
+          <input type="radio" name="q4" value="silos" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Dados dispersos em silos (cada setor tem o seu e não se conversam).</div>
+        </label>
+      </div>
+      </div>
+</div>
+
+  <!-- ── ÁREA 3: TECNOLOGIA ── -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon icon-tech">🔬</div>
+      <div>
+        <div class="section-title">Área 3</div>
+        <div class="section-subtitle">Tecnologia — Confiabilidade e Maturidade</div>
+      </div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="field-group" id="fg-q5">
+      <label class="field-label">
+        <span class="q-num">5</span>
+        Qual o nível de confiança da diretoria na precisão dos relatórios gerados atualmente para decisões de alto risco? *
+      </label>
+      <div class="options-list">
+        <label class="option-item" onclick="selectOption(this,'q5')">
+          <input type="radio" name="q5" value="total" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Total (100% de confiança).</div>
+        </label>
+        <label class="option-item" onclick="selectOption(this,'q5')">
+          <input type="radio" name="q5" value="moderada" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Moderada (sempre conferimos os números manualmente).</div>
+        </label>
+        <label class="option-item" onclick="selectOption(this,'q5')">
+          <input type="radio" name="q5" value="baixa" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Baixa (frequentemente encontramos divergências entre sistemas).</div>
+        </label>
+      </div>
+      </div>
+<!-- Q6 -->
+    <div class="field-group" id="fg-q6">
+      <label class="field-label">
+        <span class="q-num">6</span>
+        Atualmente, sua empresa possui alguma camada de Inteligência Artificial integrada diretamente aos fluxos de trabalho (não apenas uso isolado de ChatGPT)? *
+      </label>
+      <div class="options-list">
+        <label class="option-item" onclick="selectOption(this,'q6')">
+          <input type="radio" name="q6" value="sim_integrada" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Sim, temos IA integrada aos processos.</div>
+        </label>
+        <label class="option-item" onclick="selectOption(this,'q6')">
+          <input type="radio" name="q6" value="piloto" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Estamos em fase de testes/piloto.</div>
+        </label>
+        <label class="option-item" onclick="selectOption(this,'q6')">
+          <input type="radio" name="q6" value="nao" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Não utilizamos IA de forma estruturada.</div>
+        </label>
+      </div>
+      </div>
+</div>
+
+  <!-- ── ÁREA 4: INOVAÇÃO ── -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon icon-innovation">🚀</div>
+      <div>
+        <div class="section-title">Área 4</div>
+        <div class="section-subtitle">Inovação — Estratégia e ROI</div>
+      </div>
+    </div>
+
+    <!-- Q7 -->
+    <div class="field-group" id="fg-q7">
+      <label class="field-label">
+        <span class="q-num">7</span>
+        Se você pudesse automatizar uma decisão crítica ou um fluxo de atendimento hoje, onde estaria o maior ganho imediato para o seu negócio? *
+      </label>
+      <div class="options-list">
+        <label class="option-item" onclick="selectOption(this,'q7')">
+          <input type="radio" name="q7" value="faturamento" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Aumento de faturamento (SDR/Vendas via IA).</div>
+        </label>
+        <label class="option-item" onclick="selectOption(this,'q7')">
+          <input type="radio" name="q7" value="erros" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Redução de erros e retrabalho operacional.</div>
+        </label>
+        <label class="option-item" onclick="selectOption(this,'q7')">
+          <input type="radio" name="q7" value="cliente" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Melhoria na experiência e retenção do cliente.</div>
+        </label>
+      </div>
+      </div>
+<!-- Q8 -->
+    <div class="field-group" id="fg-q8">
+      <label class="field-label">
+        <span class="q-num">8</span>
+        Qual a importância da IA no planejamento estratégico da sua empresa para os próximos 12 meses? *
+      </label>
+      <div class="options-list">
+        <label class="option-item" onclick="selectOption(this,'q8')">
+          <input type="radio" name="q8" value="prioridade_max" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Prioridade máxima (investimento aprovado).</div>
+        </label>
+        <label class="option-item" onclick="selectOption(this,'q8')">
+          <input type="radio" name="q8" value="avaliando" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Estamos avaliando o custo-benefício.</div>
+        </label>
+        <label class="option-item" onclick="selectOption(this,'q8')">
+          <input type="radio" name="q8" value="nao_prioridade" />
+          <div class="radio-dot"></div>
+          <div class="option-text">Ainda não é uma prioridade clara.</div>
+        </label>
+      </div>
+      </div>
+</div>
+
+  <!-- ── CADASTRO PARTE 2 ── -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon icon-register2">📱</div>
+      <div>
+        <div class="section-title">Cadastro</div>
+        <div class="section-subtitle">Receba seu diagnóstico</div>
+      </div>
+    </div>
+
+    <div class="field-group" id="fg-whatsapp">
+      <label class="field-label" for="whatsapp">
+        Número do WhatsApp *
+        <span style="font-weight:400;font-size:12px;color:var(--text-muted)"> — para envio do resultado do diagnóstico</span>
+      </label>
+      <input class="text-input" type="tel" id="whatsapp" name="whatsapp"
+             placeholder="(11) 99999-9999"
+             autocomplete="tel"
+             oninput="maskWhatsApp(this)" />
+      <div class="field-error">Informe um número de WhatsApp válido.</div>
+    </div>
+  </div>
+
+  <!-- ── SUBMIT ── -->
+  <div class="submit-wrap">
+    <button type="submit" class="btn-submit" id="btnSubmit">
+      <span>🚀</span>
+      <span>Solicitar Diagnóstico</span>
+    </button>
+    <p id="submit-error" style="display:none;margin-top:12px;font-size:13px;color:var(--error);">
+      Ocorreu um erro ao enviar. Verifique sua conexão e tente novamente.
+    </p>
+  </div>
+
+</form>
+</div><!-- /container -->
+
+<!-- ═══════════════ MODAL DE SUCESSO ═══════════════ -->
+<div id="modal-overlay">
+  <div id="modal-box">
+    <div id="modal-icon">✅</div>
+    <p id="modal-text">Suas informações foram enviadas para nossos especialistas, em breve retornaremos via WhatsApp e e-mail</p>
+    <div id="modal-counter">Redirecionando em <span id="countdown">3</span>s…</div>
+  </div>
+</div>
+
+<!-- ═══════════════ SUCCESS SCREEN ═══════════════ -->
+<div id="success-screen">
+  <div class="success-icon">✅</div>
+  <h2>Diagnóstico Enviado!</h2>
+  <p>Obrigado, <strong id="success-name"></strong>!<br>
+     Em breve nossa equipe enviará o resultado do seu diagnóstico personalizado pelo WhatsApp.</p>
+  <p style="margin-top:16px;font-size:13px;">
+    <a href="#" onclick="resetForm()" style="color:var(--primary);text-decoration:none;font-weight:500;">
+      ← Preencher novo formulário
+    </a>
+  </p>
+</div>
+
+<script>
+/* ── Progress tracking ── */
+const TOTAL_FIELDS = 10; // nome, empresa, q1–q8, whatsapp
+
+function countAnswered() {
+  let n = 0;
+  const nome = document.getElementById('nome').value.trim();
+  const empresa = document.getElementById('empresa').value.trim();
+  const wa = document.getElementById('whatsapp').value.trim();
+  if (nome) n++;
+  if (empresa) n++;
+  if (wa.length >= 10) n++;
+  ['q1','q2','q3','q4','q5','q6','q7','q8'].forEach(q => {
+    if (document.querySelector(`input[name="${q}"]:checked`)) n++;
+  });
+  return n;
+}
+
+function updateProgress() {
+  const answered = countAnswered();
+  const pct = Math.round((answered / TOTAL_FIELDS) * 100);
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = answered + ' / ' + TOTAL_FIELDS + ' respondidas';
+}
+
+/* ── Radio selection ── */
+function selectOption(clickedLabel, qName) {
+  // deselect siblings
+  const siblings = clickedLabel.closest('.options-list').querySelectorAll('.option-item');
+  siblings.forEach(s => s.classList.remove('selected'));
+  clickedLabel.classList.add('selected');
+  // check the radio
+  const radio = clickedLabel.querySelector('input[type="radio"]');
+  if (radio) radio.checked = true;
+  // clear error
+  const fg = clickedLabel.closest('.field-group');
+  if (fg) fg.classList.remove('has-error');
+  updateProgress();
+}
+
+/* ── WhatsApp mask ── */
+function maskWhatsApp(input) {
+  let v = input.value.replace(/\D/g,'').slice(0,11);
+  if (v.length > 6) v = '(' + v.slice(0,2) + ') ' + v.slice(2,7) + '-' + v.slice(7);
+  else if (v.length > 2) v = '(' + v.slice(0,2) + ') ' + v.slice(2);
+  else if (v.length > 0) v = '(' + v;
+  input.value = v;
+  updateProgress();
+}
+
+/* text input listener */
+['nome','empresa','whatsapp'].forEach(id => {
+  document.getElementById(id).addEventListener('input', function() {
+    document.getElementById('fg-' + id).classList.remove('has-error');
+    updateProgress();
+  });
+});
+
+/* ── Validation ── */
+function validate() {
+  let ok = true;
+
+  function checkText(id, minLen) {
+    const el = document.getElementById(id);
+    const fg = document.getElementById('fg-' + id);
+    if (el.value.trim().length < minLen) {
+      fg.classList.add('has-error');
+      ok = false;
+    }
+  }
+
+  function checkRadio(name) {
+    const checked = document.querySelector(`input[name="${name}"]:checked`);
+    const fg = document.getElementById('fg-' + name);
+    if (!checked) {
+      fg.classList.add('has-error');
+      ok = false;
+    }
+  }
+
+  checkText('nome', 2);
+  checkText('empresa', 2);
+  ['q1','q2','q3','q4','q5','q6','q7','q8'].forEach(checkRadio);
+
+  // WhatsApp: at least 10 digits
+  const wa = document.getElementById('whatsapp').value.replace(/\D/g,'');
+  if (wa.length < 10) {
+    document.getElementById('fg-whatsapp').classList.add('has-error');
+    ok = false;
+  }
+
+  return ok;
+}
+
+/* ── Submit ── */
+document.getElementById('diagForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  if (!validate()) {
+    // scroll to first error
+    const first = document.querySelector('.has-error');
+    if (first) first.scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+
+  // Collect data
+  const data = {
+    nome: document.getElementById('nome').value.trim(),
+    empresa: document.getElementById('empresa').value.trim(),
+    whatsapp: document.getElementById('whatsapp').value.trim(),
+    respostas: {}
+  };
+  ['q1','q2','q3','q4','q5','q6','q7','q8'].forEach(q => {
+    const checked = document.querySelector(`input[name="${q}"]:checked`);
+    let val = checked ? checked.value : '';
+    // capture "outros" text
+    if (val === 'outros') {
+      const outrosInput = checked.closest('.option-item').querySelector('.outros-input');
+      if (outrosInput && outrosInput.value.trim()) val = 'outros: ' + outrosInput.value.trim();
+    }
+    data.respostas[q] = val;
+  });
+
+  console.log('[Draiven Diagnóstico] Dados coletados:', data);
+
+  const btn = document.getElementById('btnSubmit');
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span><span>Enviando...</span>';
+
+  const WEBHOOK_URL = 'https://rabt-systems.rabt.com.br/webhook-test/a03b1233-2c9a-473d-97c5-5f73da7f5d60';
+
+  fetch(WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  })
+  .then(res => {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    showSuccessModal();
+  })
+  .catch(err => {
+    console.error('[Draiven Diagnóstico] Erro ao enviar:', err);
+    btn.disabled = false;
+    btn.innerHTML = '<span>🚀</span><span>Solicitar Diagnóstico</span>';
+    const errEl = document.getElementById('submit-error');
+    if (errEl) errEl.style.display = 'block';
+  });
+});
+
+function resetForm() {
+  document.getElementById('diagForm').reset();
+  document.querySelectorAll('.option-item').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.field-group').forEach(el => el.classList.remove('has-error'));
+  document.getElementById('success-screen').style.display = 'none';
+  document.getElementById('form-container').style.display = 'block';
+  document.querySelector('.progress-wrap').style.display = 'block';
+  document.getElementById('btnSubmit').disabled = false;
+  document.getElementById('btnSubmit').innerHTML = '<span>🚀</span><span>Enviar Diagnóstico</span>';
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function showSuccessModal() {
+  const overlay = document.getElementById('modal-overlay');
+  overlay.classList.add('visible');
+  let n = 3;
+  document.getElementById('countdown').textContent = n;
+  const timer = setInterval(() => {
+    n--;
+    document.getElementById('countdown').textContent = n;
+    if (n <= 0) {
+      clearInterval(timer);
+      window.location.href = 'https://draiven.io';
+    }
+  }, 1000);
+}
+
+// init
+updateProgress();
+</script>
+</body>
+</html>
