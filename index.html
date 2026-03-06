@@ -498,12 +498,6 @@
       </div>
     </div>
 
-    <div class="field-group" id="fg-nome">
-      <label class="field-label" for="nome">Nome completo *</label>
-      <input class="text-input" type="text" id="nome" name="nome" placeholder="Ex: João Silva" autocomplete="name" />
-      <div class="field-error">Por favor, informe seu nome completo.</div>
-    </div>
-
     <div class="field-group" id="fg-empresa">
       <label class="field-label" for="empresa">Nome da empresa *</label>
       <input class="text-input" type="text" id="empresa" name="empresa" placeholder="Ex: Acme Ltda." autocomplete="organization" />
@@ -780,6 +774,12 @@
       </div>
     </div>
 
+    <div class="field-group" id="fg-nome">
+      <label class="field-label" for="nome">Nome completo *</label>
+      <input class="text-input" type="text" id="nome" name="nome" placeholder="Ex: João Silva" autocomplete="name" />
+      <div class="field-error">Por favor, informe seu nome completo.</div>
+    </div>
+
     <div class="field-group" id="fg-whatsapp">
       <label class="field-label" for="whatsapp">
         Número do WhatsApp *
@@ -831,15 +831,14 @@
 
 <script>
 /* ── Progress tracking ── */
-const TOTAL_FIELDS = 10; // nome, empresa, q1–q8, whatsapp
+const TOTAL_FIELDS = 12; // nome, empresa, ramo, q1–q8, whatsapp
 
 function countAnswered() {
   let n = 0;
-  const nome = document.getElementById('nome').value.trim();
-  const empresa = document.getElementById('empresa').value.trim();
+  if (document.getElementById('nome').value.trim()) n++;
+  if (document.getElementById('empresa').value.trim()) n++;
+  if (document.getElementById('ramo').value.trim()) n++;
   const wa = document.getElementById('whatsapp').value.trim();
-  if (nome) n++;
-  if (empresa) n++;
   if (wa.length >= 10) n++;
   ['q1','q2','q3','q4','q5','q6','q7','q8'].forEach(q => {
     if (document.querySelector(`input[name="${q}"]:checked`)) n++;
@@ -867,6 +866,20 @@ function selectOption(clickedLabel, qName) {
   const fg = clickedLabel.closest('.field-group');
   if (fg) fg.classList.remove('has-error');
   updateProgress();
+  // auto-scroll para o próximo field-group ou section-card
+  setTimeout(() => {
+    const allGroups = Array.from(document.querySelectorAll('.field-group, .section-card'));
+    const currentGroup = fg;
+    const currentIndex = allGroups.indexOf(currentGroup);
+    // procura o próximo field-group fora do card atual
+    for (let i = currentIndex + 1; i < allGroups.length; i++) {
+      const next = allGroups[i];
+      if (next !== currentGroup && !currentGroup.contains(next)) {
+        next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        break;
+      }
+    }
+  }, 300);
 }
 
 /* ── WhatsApp mask ── */
