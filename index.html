@@ -509,6 +509,12 @@
       <input class="text-input" type="text" id="empresa" name="empresa" placeholder="Ex: Acme Ltda." autocomplete="organization" />
       <div class="field-error">Por favor, informe o nome da empresa.</div>
     </div>
+
+    <div class="field-group" id="fg-ramo">
+      <label class="field-label" for="ramo">Ramo de atuação da empresa *</label>
+      <input class="text-input" type="text" id="ramo" name="ramo" placeholder="Ex: Tecnologia, Saúde, Varejo..." />
+      <div class="field-error">Por favor, informe o ramo de atuação.</div>
+    </div>
   </div>
 
   <!-- ── ÁREA 1: PROCESSOS ── -->
@@ -874,7 +880,7 @@ function maskWhatsApp(input) {
 }
 
 /* text input listener */
-['nome','empresa','whatsapp'].forEach(id => {
+['nome','empresa','ramo','whatsapp'].forEach(id => {
   document.getElementById(id).addEventListener('input', function() {
     document.getElementById('fg-' + id).classList.remove('has-error');
     updateProgress();
@@ -905,6 +911,7 @@ function validate() {
 
   checkText('nome', 2);
   checkText('empresa', 2);
+  checkText('ramo', 2);
   ['q1','q2','q3','q4','q5','q6','q7','q8'].forEach(checkRadio);
 
   // WhatsApp: at least 10 digits
@@ -931,16 +938,26 @@ document.getElementById('diagForm').addEventListener('submit', function(e) {
   const data = {
     nome: document.getElementById('nome').value.trim(),
     empresa: document.getElementById('empresa').value.trim(),
+    ramo: document.getElementById('ramo').value.trim(),
     whatsapp: document.getElementById('whatsapp').value.trim(),
     respostas: {}
   };
   ['q1','q2','q3','q4','q5','q6','q7','q8'].forEach(q => {
     const checked = document.querySelector(`input[name="${q}"]:checked`);
-    let val = checked ? checked.value : '';
-    // capture "outros" text
-    if (val === 'outros') {
-      const outrosInput = checked.closest('.option-item').querySelector('.outros-input');
-      if (outrosInput && outrosInput.value.trim()) val = 'outros: ' + outrosInput.value.trim();
+    let val = '';
+    if (checked) {
+      const optionItem = checked.closest('.option-item');
+      const optionTextEl = optionItem.querySelector('.option-text');
+      // pega só o texto direto, ignorando o input "outros" filho
+      val = Array.from(optionTextEl.childNodes)
+        .filter(n => n.nodeType === Node.TEXT_NODE)
+        .map(n => n.textContent.trim())
+        .join('').trim();
+      // se for "Outros", concatena o texto digitado
+      if (checked.value === 'outros') {
+        const outrosInput = optionItem.querySelector('.outros-input');
+        if (outrosInput && outrosInput.value.trim()) val = 'Outros: ' + outrosInput.value.trim();
+      }
     }
     data.respostas[q] = val;
   });
@@ -951,11 +968,11 @@ document.getElementById('diagForm').addEventListener('submit', function(e) {
   btn.disabled = true;
   btn.innerHTML = '<span>⏳</span><span>Enviando...</span>';
 
-  const WEBHOOK_URL = 'https://rabt-systems.rabt.com.br/webhook-test/a03b1233-2c9a-473d-97c5-5f73da7f5d60';
+  const WEBHOOK_URL = 'https://rabt-systems.rabt.com.br/webhook/a03b1233-2c9a-473d-97c5-5f73da7f5d60';
 
   fetch(WEBHOOK_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'x-api-key': 'draiven-diagnostico-2026-v3' },
     body: JSON.stringify(data)
   })
   .then(res => {
